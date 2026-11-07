@@ -27,11 +27,7 @@ export default async function ComposePage({
           <p className="mt-4 rounded-sm bg-red/10 px-3 py-2 text-sm text-red">{error}</p>
         )}
 
-        <form
-          action={createPostcard}
-          encType="multipart/form-data"
-          className="mt-6 flex flex-col gap-4"
-        >
+        <form action={createPostcard} className="mt-6 flex flex-col gap-4">
           <label className="flex flex-col gap-1 text-sm text-ink/80">
             Photo
             <input

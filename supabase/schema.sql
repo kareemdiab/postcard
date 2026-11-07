@@ -98,6 +98,43 @@ create table public.postcards (
   created_at timestamptz not null default now()
 );
 
+-- Postcard recipients (drives the mailbox for direct sends) ------------------
+-- Created before the postcards RLS policies below, since one of them references this table.
+create table public.postcard_recipients (
+  postcard_id uuid not null references public.postcards(id) on delete cascade,
+  recipient_id uuid not null references public.profiles(id) on delete cascade,
+  read_at timestamptz,
+  primary key (postcard_id, recipient_id)
+);
+
+-- These two tables' RLS policies each need to check a fact about the other
+-- table (is this postcard addressed to me / do I own this postcard). A plain
+-- EXISTS subquery on the other table would re-trigger that table's own RLS,
+-- which loops back here — infinite recursion. Security-definer functions
+-- bypass RLS so the check runs once, plainly, with no re-triggering.
+create function public.owns_postcard(p_postcard_id uuid, p_user_id uuid)
+returns boolean
+language sql
+stable
+security definer set search_path = public
+as $$
+  select exists (
+    select 1 from public.postcards where id = p_postcard_id and sender_id = p_user_id
+  );
+$$;
+
+create function public.is_postcard_recipient(p_postcard_id uuid, p_user_id uuid)
+returns boolean
+language sql
+stable
+security definer set search_path = public
+as $$
+  select exists (
+    select 1 from public.postcard_recipients
+    where postcard_id = p_postcard_id and recipient_id = p_user_id
+  );
+$$;
+
 alter table public.postcards enable row level security;
 
 create policy "Postcards are viewable by their audience"
@@ -106,10 +143,7 @@ create policy "Postcards are viewable by their audience"
     visibility = 'public'
     or sender_id = auth.uid()
     or (visibility = 'friends' and public.are_friends(sender_id, auth.uid()))
-    or (visibility = 'direct' and exists (
-      select 1 from public.postcard_recipients pr
-      where pr.postcard_id = postcards.id and pr.recipient_id = auth.uid()
-    ))
+    or (visibility = 'direct' and public.is_postcard_recipient(id, auth.uid()))
   );
 
 create policy "Users can send their own postcards"
@@ -120,28 +154,18 @@ create policy "Senders can delete their own postcards"
   on public.postcards for delete
   using (auth.uid() = sender_id);
 
--- Postcard recipients (drives the mailbox for direct sends) ------------------
-create table public.postcard_recipients (
-  postcard_id uuid not null references public.postcards(id) on delete cascade,
-  recipient_id uuid not null references public.profiles(id) on delete cascade,
-  read_at timestamptz,
-  primary key (postcard_id, recipient_id)
-);
-
 alter table public.postcard_recipients enable row level security;
 
 create policy "Sender or recipient can view mailbox rows"
   on public.postcard_recipients for select
   using (
     auth.uid() = recipient_id
-    or exists (select 1 from public.postcards p where p.id = postcard_id and p.sender_id = auth.uid())
+    or public.owns_postcard(postcard_id, auth.uid())
   );
 
 create policy "Senders can address their own postcards"
   on public.postcard_recipients for insert
-  with check (
-    exists (select 1 from public.postcards p where p.id = postcard_id and p.sender_id = auth.uid())
-  );
+  with check (public.owns_postcard(postcard_id, auth.uid()));
 
 create policy "Recipients can mark their own mail as read"
   on public.postcard_recipients for update

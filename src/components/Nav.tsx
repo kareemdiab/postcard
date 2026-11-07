@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/auth/actions";
+import { SettingsMenu } from "@/components/SettingsMenu";
 
 export async function Nav() {
   const supabase = await createClient();
@@ -40,11 +41,7 @@ export async function Nav() {
               Profile
             </Link>
           )}
-          <form action={signOut}>
-            <button type="submit" className="hover:text-red">
-              Sign out
-            </button>
-          </form>
+          <SettingsMenu signOutAction={signOut} />
         </div>
       </div>
     </nav>
