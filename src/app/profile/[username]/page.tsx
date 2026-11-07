@@ -7,6 +7,7 @@ type ProfilePostcard = {
   image_url: string;
   message: string;
   created_at: string;
+  stamp_id: string | null;
 };
 
 export default async function ProfilePage({
@@ -27,7 +28,7 @@ export default async function ProfilePage({
 
   const { data } = await supabase
     .from("postcards")
-    .select("id, image_url, message, created_at")
+    .select("id, image_url, message, created_at, stamp_id")
     .eq("sender_id", profile.id)
     .neq("visibility", "direct")
     .order("created_at", { ascending: false });
@@ -52,6 +53,7 @@ export default async function ProfilePage({
               message={postcard.message}
               createdAt={postcard.created_at}
               senderLabel={profile.username}
+              stampId={postcard.stamp_id}
             />
           ))}
         </div>

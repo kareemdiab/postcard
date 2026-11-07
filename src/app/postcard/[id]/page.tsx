@@ -7,6 +7,7 @@ type PostcardDetail = {
   image_url: string;
   message: string;
   created_at: string;
+  stamp_id: string | null;
   profiles: { username: string } | null;
 };
 
@@ -24,7 +25,9 @@ export default async function PostcardPage({
 
   const { data } = await supabase
     .from("postcards")
-    .select("id, image_url, message, created_at, profiles!postcards_sender_id_fkey(username)")
+    .select(
+      "id, image_url, message, created_at, stamp_id, profiles!postcards_sender_id_fkey(username)"
+    )
     .eq("id", id)
     .single();
 
@@ -46,6 +49,7 @@ export default async function PostcardPage({
         message={postcard.message}
         createdAt={postcard.created_at}
         senderLabel={postcard.profiles?.username ?? "unknown"}
+        stampId={postcard.stamp_id}
       />
       <p className="mt-4 text-xs text-ink/50">Tap the card to flip it over.</p>
     </div>

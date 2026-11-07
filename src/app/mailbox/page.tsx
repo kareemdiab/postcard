@@ -9,6 +9,7 @@ type MailRow = {
     image_url: string;
     message: string;
     created_at: string;
+    stamp_id: string | null;
     profiles: { username: string } | null;
   } | null;
 };
@@ -23,7 +24,7 @@ export default async function MailboxPage() {
   const { data } = await supabase
     .from("postcard_recipients")
     .select(
-      "read_at, postcards(id, image_url, message, created_at, profiles!postcards_sender_id_fkey(username))"
+      "read_at, postcards(id, image_url, message, created_at, stamp_id, profiles!postcards_sender_id_fkey(username))"
     )
     .eq("recipient_id", user.id);
 
@@ -51,6 +52,7 @@ export default async function MailboxPage() {
               message={row.postcards!.message}
               createdAt={row.postcards!.created_at}
               senderLabel={row.postcards!.profiles?.username ?? "unknown"}
+              stampId={row.postcards!.stamp_id}
             />
           ))}
         </div>

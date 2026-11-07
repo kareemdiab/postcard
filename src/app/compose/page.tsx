@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getAcceptedFriends } from "@/lib/friends";
+import { StampPicker } from "@/components/StampPicker";
 import { createPostcard } from "./actions";
 
 export default async function ComposePage({
@@ -50,6 +51,8 @@ export default async function ComposePage({
               placeholder="Wish you were here..."
             />
           </label>
+
+          <StampPicker />
 
           <fieldset className="flex flex-col gap-2 text-sm text-ink/80">
             <legend className="mb-1">Who&rsquo;s it for?</legend>

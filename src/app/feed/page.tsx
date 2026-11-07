@@ -7,6 +7,7 @@ type FeedPostcard = {
   image_url: string;
   message: string;
   created_at: string;
+  stamp_id: string | null;
   profiles: { username: string } | null;
 };
 
@@ -15,7 +16,9 @@ export default async function FeedPage() {
 
   const { data } = await supabase
     .from("postcards")
-    .select("id, image_url, message, created_at, profiles!postcards_sender_id_fkey(username)")
+    .select(
+      "id, image_url, message, created_at, stamp_id, profiles!postcards_sender_id_fkey(username)"
+    )
     .neq("visibility", "direct")
     .order("created_at", { ascending: false })
     .limit(50);
@@ -44,6 +47,7 @@ export default async function FeedPage() {
               message={postcard.message}
               createdAt={postcard.created_at}
               senderLabel={postcard.profiles?.username ?? "unknown"}
+              stampId={postcard.stamp_id}
             />
           ))}
         </div>

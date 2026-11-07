@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { Stamp } from "@/components/Stamp";
 
 type PostcardCardProps = {
   imageUrl: string;
@@ -9,6 +10,7 @@ type PostcardCardProps = {
   senderLabel: string;
   createdAt: string;
   recipientLabel?: string;
+  stampId?: string | null;
 };
 
 export function PostcardCard({
@@ -17,6 +19,7 @@ export function PostcardCard({
   senderLabel,
   createdAt,
   recipientLabel,
+  stampId,
 }: PostcardCardProps) {
   const [flipped, setFlipped] = useState(false);
   const postmark = new Date(createdAt).toLocaleDateString("en-US", {
@@ -59,11 +62,7 @@ export function PostcardCard({
             </p>
           </div>
           <div className="flex w-24 flex-col items-end justify-between pl-3">
-            <div className="flex h-16 w-12 rotate-3 items-center justify-center rounded-sm border-2 border-dashed border-mustard/70 bg-mustard/10">
-              <span className="rotate-[-6deg] font-type text-[8px] text-mustard">
-                POSTAGE
-              </span>
-            </div>
+            <Stamp id={stampId} className="h-16 w-12 rotate-3 drop-shadow-sm" />
             <div className="text-right">
               {recipientLabel && (
                 <p className="font-type text-[10px] text-ink/70">

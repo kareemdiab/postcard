@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { STAMPS, DEFAULT_STAMP_ID } from "@/components/Stamp";
 
 export async function createPostcard(formData: FormData) {
   const supabase = await createClient();
@@ -14,6 +15,10 @@ export async function createPostcard(formData: FormData) {
   const message = (formData.get("message") as string)?.trim();
   const visibility = formData.get("visibility") as "public" | "friends" | "direct";
   const recipientUsername = (formData.get("recipient") as string)?.trim().toLowerCase();
+  const requestedStampId = formData.get("stamp_id") as string;
+  const stampId = STAMPS.some((s) => s.id === requestedStampId)
+    ? requestedStampId
+    : DEFAULT_STAMP_ID;
 
   if (!image || image.size === 0 || !message) {
     redirect("/compose?error=" + encodeURIComponent("Add a photo and a message"));
@@ -54,7 +59,7 @@ export async function createPostcard(formData: FormData) {
 
   const { data: postcard, error: postcardError } = await supabase
     .from("postcards")
-    .insert({ sender_id: user.id, image_url: publicUrl, message, visibility })
+    .insert({ sender_id: user.id, image_url: publicUrl, message, visibility, stamp_id: stampId })
     .select("id")
     .single();
 

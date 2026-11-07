@@ -95,6 +95,7 @@ create table public.postcards (
   image_url text not null,
   message text not null,
   visibility text not null check (visibility in ('public', 'friends', 'direct')),
+  stamp_id text not null default 'compass',
   created_at timestamptz not null default now()
 );
 
